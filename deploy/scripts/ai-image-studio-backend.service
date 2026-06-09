@@ -1,0 +1,19 @@
+[Unit]
+Description=AI Image Studio Backend API
+Documentation=https://github.com/ai-image-studio
+After=network.target
+
+[Service]
+Type=simple
+User=ai-image-studio
+WorkingDirectory=/opt/ai-image-studio/python_backend
+ExecStart=/opt/ai-image-studio/python_backend/venv/bin/python /opt/ai-image-studio/python_backend/main.py
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+Environment=FLASK_ENV=production
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target

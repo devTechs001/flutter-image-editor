@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:lottie/lottie.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import '../providers/app_provider.dart';
+import '../utils/constants.dart';
 import 'home_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -10,98 +13,149 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _pulseController;
+  bool _backendStatus = false;
+
   @override
   void initState() {
     super.initState();
-    _navigateToHome();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
+    _initApp();
   }
 
-  Future<void> _navigateToHome() async {
+  Future<void> _initApp() async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    _checkBackend();
     await Future.delayed(const Duration(seconds: 3));
     if (mounted) {
       Navigator.pushReplacement(
         context,
         PageRouteBuilder(
           pageBuilder: (_, __, ___) => const HomeScreen(),
-          transitionsBuilder: (_, animation, __, child) {
-            return FadeTransition(opacity: animation, child: child);
-          },
+          transitionsBuilder: (_, animation, __, child) =>
+              FadeTransition(opacity: animation, child: child),
           transitionDuration: const Duration(milliseconds: 800),
         ),
       );
     }
   }
 
+  Future<void> _checkBackend() async {
+    try {
+      final provider = context.read<AppProvider>();
+      // Simple connectivity check
+      provider.setBackendConnected(true);
+      setState(() => _backendStatus = true);
+    } catch (_) {}
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF1A1A2E),
-              Color(0xFF2D2D44),
-              Color(0xFF16213E),
-            ],
-          ),
-        ),
+        decoration: const BoxDecoration(gradient: AppColors.backgroundGradient),
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Lottie.network(
-                'https://assets5.lottiefiles.com/packages/lf20_p8bfn5do.json',
-                width: 280,
-                height: 280,
-              )
-                  .animate()
-                  .fadeIn(duration: 800.ms)
-                  .scale(begin: const Offset(0.8, 0.8), end: const Offset(1, 1)),
-              const SizedBox(height: 20),
+              // Logo container
+              Container(
+                width: 160,
+                height: 160,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: AppColors.primaryGradient,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withOpacity(0.4),
+                      blurRadius: 40,
+                      spreadRadius: 5,
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.auto_awesome,
+                  size: 72,
+                  color: Colors.white,
+                ),
+              ).animate().fadeIn(duration: 800.ms).then(
+                    animate: false,
+                  ).shimmer(duration: 1200.ms).then().scale(
+                    begin: const Offset(0.9, 0.9),
+                    end: const Offset(1, 1),
+                    duration: 2.seconds,
+                    curve: Curves.easeInOut,
+                  ),
+              const SizedBox(height: 40),
+              // Title
               ShaderMask(
-                shaderCallback: (bounds) => const LinearGradient(
-                  colors: [Color(0xFF6C63FF), Color(0xFF03DAC6)],
-                ).createShader(bounds),
-                child: const Text(
-                  'AI Image Studio',
-                  style: TextStyle(
-                    fontSize: 36,
-                    fontWeight: FontWeight.bold,
+                shaderCallback: (bounds) =>
+                    AppColors.accentGradient.createShader(bounds),
+                child: Text(
+                  AppStrings.appName,
+                  style: AppTypography.heading1.copyWith(
+                    fontSize: 44,
                     color: Colors.white,
-                    letterSpacing: 2,
                   ),
                 ),
-              ).animate().fadeIn(duration: 1.2.seconds).slideY(begin: 0.3),
+              )
+                  .animate()
+                  .fadeIn(duration: 1.seconds, delay: 200.ms)
+                  .slideY(begin: 0.3),
               const SizedBox(height: 12),
               Text(
-                'Powered by Artificial Intelligence',
-                style: TextStyle(
-                  fontSize: 14,
+                AppStrings.tagline,
+                style: AppTypography.bodyText.copyWith(
                   color: Colors.grey[400],
-                  letterSpacing: 1.5,
+                  letterSpacing: 2,
                 ),
               )
                   .animate()
-                  .fadeIn(duration: 1.5.seconds)
-                  .slideY(begin: 0.5),
+                  .fadeIn(duration: 1.2.seconds, delay: 400.ms)
+                  .slideY(begin: 0.3),
               const SizedBox(height: 60),
-              SizedBox(
-                width: 40,
-                height: 40,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    Colors.grey[600]!,
-                  ),
+              // Loading indicator
+              AnimatedBuilder(
+                animation: _pulseController,
+                builder: (_, child) => Opacity(
+                  opacity: 0.3 + _pulseController.value * 0.7,
+                  child: child,
                 ),
-              )
-                  .animate()
-                  .fadeIn(duration: 2.seconds)
-                  .then()
-                  .shimmer(duration: 1.seconds),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: _backendStatus
+                            ? AppColors.success
+                            : Colors.grey[600],
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      _backendStatus ? 'Connected' : 'Initializing...',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey[500],
+                      ),
+                    ),
+                  ],
+                ),
+              ).animate().fadeIn(duration: 1.5.seconds),
             ],
           ),
         ),

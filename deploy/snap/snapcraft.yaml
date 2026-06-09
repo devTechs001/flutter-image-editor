@@ -1,0 +1,59 @@
+name: ai-image-studio
+base: core22
+version: '2.0.0'
+summary: AI-powered image editor and video maker
+description: |
+  A comprehensive application that combines AI-powered image editing,
+  text/image recognition, and video generation from prompts.
+
+grade: stable
+confinement: strict
+
+apps:
+  ai-image-studio:
+    command: ai_image_editor
+    extensions: [gnome]
+    plugs:
+      - home
+      - removable-media
+      - camera
+      - network
+      - network-bind
+      - joystick
+
+  backend:
+    command: python_backend/main.py
+    daemon: simple
+    plugs:
+      - network
+      - network-bind
+
+parts:
+  flutter-app:
+    source: .
+    plugin: flutter
+    flutter-target: lib/main.dart
+    build-snaps:
+      - flutter
+      - curl
+    build-packages:
+      - clang
+      - cmake
+      - ninja-build
+      - pkg-config
+      - libgtk-3-dev
+
+  python-backend:
+    source: python_backend
+    plugin: python
+    python-requirements: requirements.txt
+    build-packages:
+      - python3-dev
+      - libgl1-mesa-glx
+      - libglib2.0-0
+    stage-packages:
+      - python3
+      - ffmpeg
+      - tesseract-ocr
+      - libgl1-mesa-glx
+      - libglib2.0-0
