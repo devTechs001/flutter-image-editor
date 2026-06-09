@@ -1,0 +1,55 @@
+# Flutter
+.dart_tool/
+.packages
+build/
+*.iml
+.idea/
+.vscode/
+*.lock
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+.env
+venv/
+.venv/
+
+# Uploads and outputs
+python_backend/uploads/
+python_backend/outputs/
+python_backend/temp_video/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Assets
+assets/fonts/
+assets/videos/
+assets/animations/
+
+# Models
+*.pt
+*.pth
+*.onnx
+*.caffemodel
+*.prototxt
+*.pb
